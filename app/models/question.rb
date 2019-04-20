@@ -17,4 +17,13 @@ class Question < ApplicationRecord
 
     has_many :responses, through: :answer_choices, source: :responses
 
+    def results
+        resultshash = {}
+        answer_responses = answer_choices.includes(:responses)
+        answer_responses.each do |ar|
+            resultshash[ar] = ar.responses.length
+        end
+        resultshash
+    end
+
 end

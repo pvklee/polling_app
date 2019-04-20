@@ -1,5 +1,7 @@
 class Response < ApplicationRecord
     validates :user_id, :answer_choice_id, presence: true
+    validate :respondent_already_answered?
+    validate :respondent_is_author?
 
     belongs_to(
         :answer_choice,
@@ -21,9 +23,18 @@ class Response < ApplicationRecord
         question.responses.where.not(id: self.id)
     end
 
+    private
     def respondent_already_answered?
         answered = sibling_responses.where(user_id: self.user_id)
-        answered[0] != nil
+        if answered[0] != nil
+            errors[:response] << 'can\'t answer same question twice'
+        end
+    end
+
+    def respondent_is_author?
+        if question.poll.author.id == respondent.id
+            errors[:response] << 'author can\'t answer own question'
+        end
     end
 
 end

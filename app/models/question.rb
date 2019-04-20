@@ -19,11 +19,26 @@ class Question < ApplicationRecord
 
     def results
         resultshash = {}
-        answer_responses = answer_choices.includes(:responses)
-        answer_responses.each do |ar|
-            resultshash[ar] = ar.responses.length
+        
+        answer_responses = AnswerChoice.find_by_sql([<<-SQL, id])
+            SELECT
+                answer_choices.answer, COUNT(responses.answer_choice_id) AS num_responses
+            FROM
+                answer_choices
+            LEFT OUTER JOIN
+                responses
+            ON
+                responses.answer_choice_id = answer_choices.id
+            WHERE answer_choices.question_id = 1
+            GROUP BY answer_choices.id
+            ORDER BY COUNT(responses.answer_choice_id) DESC
+        SQL
+
+        answer_responses.inject({}) do |results, ac|
+            results[ac.answer] = ac.num_responses
+            results
         end
-        resultshash
+        
     end
 
 end
